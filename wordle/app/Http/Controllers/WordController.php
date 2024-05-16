@@ -34,9 +34,14 @@ class WordController extends Controller
             'word' => 'required|size:5',
             'scheduled_at' => 'required|date|after_or_equal:today|unique:words',
         ]);
+        // Solution with MVC: we created a modal, migration and seeder for valid words
+        $valid = Validword::where('word', $request->get('word'))->first();
+        if (!$valid) {
+            return redirect()->back()->withErrors(['word' => 'The word ' . $request->get('word') . ' is not valid.']);
+        }
 
         $word = new Word([
-            'word' => $request->get('word'),
+            'word' => strtolower($request->get('word')),
             'scheduled_at' => $request->get('scheduled_at'),
         ]);
 
@@ -57,7 +62,7 @@ class WordController extends Controller
      */
     public function edit(string $id)
     {
-        $word = Word::find($id);
+        $word = strtolower(Word::find($id));
         return view('words.edit', compact('word'));
     }
 
@@ -71,7 +76,7 @@ class WordController extends Controller
             'scheduled_at' => 'required|date|after_or_equal:today',
         ]);
 
-        $new_word = $request->get('word');
+        $new_word = strtolower($request->get('word'));
 
         // Easy solution: search for valid words in array in method underneath
         // if (!$this->isValid($new_word)) {
@@ -85,7 +90,7 @@ class WordController extends Controller
         }
 
         $word = Word::find($id);
-        $word->word =  $new_word;
+        $word->word = $new_word;
         $word->scheduled_at = $request->get('scheduled_at');
 
         $word->save();
